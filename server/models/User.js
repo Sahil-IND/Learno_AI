@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema(
     },
     lastName: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
       trim: true,
     },
     // Define the email field with type String, required, and trimmed
@@ -54,6 +55,22 @@ const userSchema = new mongoose.Schema(
     ],
     token: {
       type: String,
+    },
+    // Referral: each user's shareable code, and the user who referred them
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "user",
+    },
+    // Clerk user id, set when the account signs in through Clerk
+    clerkUserId: {
+      type: String,
+      unique: true,
+      sparse: true,
     },
     resetPasswordExpires: {
       type: Date,

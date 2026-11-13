@@ -3,6 +3,7 @@ import { FooterLink2 } from "../../data/footer-links";
 import { Link } from "react-router-dom";
 import LearnoLogo from "./LearnoLogo";
 import { FaGithub, FaTwitter, FaYoutube, FaLinkedin } from "react-icons/fa";
+import GoogleTranslate from "./GoogleTranslate";
 
 const BottomFooter = ["Privacy Policy", "Terms of Service", "Academic Integrity"];
 
@@ -58,6 +59,9 @@ const Footer = () => {
         </div>
 
         {/* Bottom bar */}
+        <div className="flex justify-end pt-6">
+          <GoogleTranslate />
+        </div>
         <div className="flex flex-col sm:flex-row items-center justify-between pt-8 gap-4 text-xs text-richblack-400">
           <div className="flex flex-wrap gap-4">
             {BottomFooter.map((ele, i) => (

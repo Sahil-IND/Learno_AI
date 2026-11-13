@@ -1,7 +1,7 @@
 // Import necessary modules
 const Section = require("../models/Section")
 const SubSection = require("../models/Subsection")
-const { uploadImageToCloudinary } = require("../utils/imageUploader")
+const { uploadMedia } = require("../utils/imageUploader")
 
 // Create a new sub-section for a given section
 exports.createSubSection = async (req, res) => {
@@ -19,7 +19,7 @@ exports.createSubSection = async (req, res) => {
     console.log(video)
 
     // Upload the video file to Cloudinary
-    const uploadDetails = await uploadImageToCloudinary(
+    const uploadDetails = await uploadMedia(
       video,
       process.env.FOLDER_NAME
     )
@@ -27,7 +27,7 @@ exports.createSubSection = async (req, res) => {
     // Create a new sub-section with the necessary information
     const SubSectionDetails = await SubSection.create({
       title: title,
-      timeDuration: `${uploadDetails.duration}`,
+      timeDuration: `${uploadDetails.duration ?? req.body.timeDuration ?? 0}`,
       description: description,
       videoUrl: uploadDetails.secure_url,
     })
@@ -73,12 +73,12 @@ exports.updateSubSection = async (req, res) => {
     }
     if (req.files && req.files.video !== undefined) {
       const video = req.files.video
-      const uploadDetails = await uploadImageToCloudinary(
+      const uploadDetails = await uploadMedia(
         video,
         process.env.FOLDER_NAME
       )
       subSection.videoUrl = uploadDetails.secure_url
-      subSection.timeDuration = `${uploadDetails.duration}`
+      subSection.timeDuration = `${uploadDetails.duration ?? req.body.timeDuration ?? 0}`
     }
 
     await subSection.save()

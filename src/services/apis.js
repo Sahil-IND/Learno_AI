@@ -7,6 +7,7 @@ export const endpoints = {
   LOGIN_API: BASE_URL + "/auth/login",
   RESETPASSTOKEN_API: BASE_URL + "/auth/reset-password-token",
   RESETPASSWORD_API: BASE_URL + "/auth/reset-password",
+  CLERK_SYNC_API: BASE_URL + "/auth/clerk-sync",
 }
 
 // PROFILE ENDPOINTS

@@ -35,6 +35,7 @@ exports.updateCourseProgress = async (req, res) => {
 
       // Push the subsection into the completedVideos array
       courseProgress.completedVideos.push(subsectionId)
+      courseProgress.lectureCompletions.push({ lecture: subsectionId, completedAt: new Date() })
     }
 
     // Save the updated course progress

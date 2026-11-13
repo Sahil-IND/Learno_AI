@@ -3,7 +3,7 @@ const Category = require("../models/Category")
 const Section = require("../models/Section")
 const SubSection = require("../models/Subsection")
 const User = require("../models/User")
-const { uploadImageToCloudinary } = require("../utils/imageUploader")
+const { uploadMedia } = require("../utils/imageUploader")
 const CourseProgress = require("../models/CourseProgress")
 const { convertSecondsToDuration } = require("../utils/secToDuration")
 // Function to create a new course
@@ -73,7 +73,7 @@ exports.createCourse = async (req, res) => {
       })
     }
     // Upload the Thumbnail to Cloudinary
-    const thumbnailImage = await uploadImageToCloudinary(
+    const thumbnailImage = await uploadMedia(
       thumbnail,
       process.env.FOLDER_NAME
     )
@@ -146,7 +146,7 @@ exports.editCourse = async (req, res) => {
     if (req.files) {
       console.log("thumbnail update")
       const thumbnail = req.files.thumbnailImage
-      const thumbnailImage = await uploadImageToCloudinary(
+      const thumbnailImage = await uploadMedia(
         thumbnail,
         process.env.FOLDER_NAME
       )
@@ -370,19 +370,31 @@ exports.getFullCourseDetails = async (req, res) => {
       })
       .exec()
 
-    let courseProgressCount = await CourseProgress.findOne({
-      courseID: courseId,
-      userId: userId,
-    })
-
-    console.log("courseProgressCount : ", courseProgressCount)
-
     if (!courseDetails) {
       return res.status(400).json({
         success: false,
         message: `Could not find course with id: ${courseId}`,
       })
     }
+
+    // Lecture content is only returned to the course's instructor, an admin,
+    // or a student who is enrolled in this course.
+    const isOwner = String(courseDetails.instructor?._id) === String(userId)
+    const isEnrolled = courseDetails.studentsEnroled.some(
+      (id) => String(id) === String(userId)
+    )
+    const isAdmin = req.user.accountType === "Admin"
+    if (!isOwner && !isEnrolled && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have access to this course",
+      })
+    }
+
+    let courseProgressCount = await CourseProgress.findOne({
+      courseID: courseId,
+      userId: userId,
+    })
 
     // if (courseDetails.status === "Draft") {
     //   return res.status(403).json({
@@ -453,6 +465,14 @@ exports.deleteCourse = async (req, res) => {
     const course = await Course.findById(courseId)
     if (!course) {
       return res.status(404).json({ message: "Course not found" })
+    }
+
+    // Only the owning instructor may delete a course
+    if (String(course.instructor) !== String(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only delete your own courses",
+      })
     }
 
     // Unenroll students from the course

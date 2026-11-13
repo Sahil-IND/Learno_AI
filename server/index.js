@@ -1,4 +1,5 @@
 // Importing necessary modules and packages
+require("./config/env");
 const express = require("express");
 const app = express();
 const userRoutes = require("./routes/user");
@@ -6,11 +7,13 @@ const profileRoutes = require("./routes/profile");
 const courseRoutes = require("./routes/Course");
 const paymentRoutes = require("./routes/Payments");
 const contactUsRoute = require("./routes/Contact");
-const aiRoutes = require("./routes/ai");
+// const aiRoutes = require("./routes/ai");
+const aiGroqRoutes = require("./routes/aiGroq");
+const engagementRoutes = require("./routes/engagement");
+const instructorApplicationRoutes = require("./routes/instructorApplication");
 const database = require("./config/database");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const { cloudinaryConnect } = require("./config/cloudinary");
 const fileUpload = require("express-fileupload");
 const dotenv = require("dotenv");
 const path = require("path");
@@ -36,7 +39,7 @@ app.use(
 app.use(
 	fileUpload({
 		useTempFiles: true,
-		tempFileDir: "/tmp/",
+		tempFileDir: require("os").tmpdir(),
 	})
 );
 
@@ -44,8 +47,6 @@ app.use(
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/thumbnails", express.static(path.join(__dirname, "../public/thumbnails")));
 
-// Connecting to cloudinary
-cloudinaryConnect();
 
 // Setting up routes
 app.use("/api/v1/auth", userRoutes);
@@ -53,7 +54,10 @@ app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/reach", contactUsRoute);
-app.use("/api/v1/ai", aiRoutes);
+// app.use("/api/v1/ai", aiRoutes);
+app.use("/api/v1/ai", aiGroqRoutes);
+app.use("/api/v1/engagement", engagementRoutes);
+app.use("/api/v1/instructor", instructorApplicationRoutes);
 
 // Testing the server
 app.get("/", (req, res) => {

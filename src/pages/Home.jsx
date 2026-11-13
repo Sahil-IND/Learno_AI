@@ -1,6 +1,8 @@
 // Icons Import
 import { FaArrowRight } from "react-icons/fa"
-import { Link } from "react-router-dom"
+import { useSelector } from "react-redux"
+
+import SignedInHome from "../components/core/Home/SignedInHome"
 
 // Image and Video Import
 import Banner from "../assets/Images/banner.mp4"
@@ -15,20 +17,11 @@ import InstructorSection from "../components/core/HomePage/InstructorSection"
 import LearningLanguageSection from "../components/core/HomePage/LearningLanguageSection"
 import TimelineSection from "../components/core/HomePage/Timeline"
 
-function Home() {
+function PublicHome() {
   return (
     <div>
       {/* Section 1 */}
-      <div className="relative mx-auto flex w-11/12 max-w-maxContent flex-col items-center justify-between gap-8 text-white">
-        {/* Become a Instructor Button */}
-        <Link to={"/signup"}>
-          <div className="group mx-auto mt-16 w-fit rounded-full bg-richblack-800 p-1 font-bold text-richblack-200 drop-shadow-[0_1.5px_rgba(255,255,255,0.25)] transition-all duration-200 hover:scale-95 hover:drop-shadow-none">
-            <div className="flex flex-row items-center gap-2 rounded-full px-10 py-[5px] transition-all duration-200 group-hover:bg-richblack-900">
-              <p>Become an Instructor</p>
-              <FaArrowRight />
-            </div>
-          </div>
-        </Link>
+      <div className="relative mx-auto flex w-11/12 max-w-maxContent flex-col items-center pt-16 justify-between gap-8 text-white">
 
         {/* Heading */}
         <div className="text-center text-4xl font-semibold">
@@ -55,9 +48,9 @@ function Home() {
         </div>
 
         {/* Video */}
-        <div className="mx-3 my-7 shadow-[10px_-5px_50px_-5px] shadow-blue-200">
+        <div className="mx-3 my-7 overflow-hidden rounded-2xl border border-richblack-700 bg-richblack-800 shadow-xl">
           <video
-            className="shadow-[20px_20px_rgba(255,255,255)]"
+            className="block w-full"
             muted
             loop
             autoPlay
@@ -178,8 +171,7 @@ function Home() {
 
       {/* Section 3 */}
       <div className="relative mx-auto my-20 flex w-11/12 max-w-maxContent flex-col items-center justify-between gap-8 bg-richblack-900 text-white">
-        {/* Become a instructor section */}
-        <InstructorSection />
+          <InstructorSection />
 
         {/* Reviws from Other Learner */}
         <h1 className="text-center text-4xl font-semibold mt-8">
@@ -192,6 +184,12 @@ function Home() {
       <Footer />
     </div>
   )
+}
+
+// Signed-in students get the student home; visitors get the landing page
+function Home() {
+  const { token } = useSelector((state) => state.auth)
+  return token !== null ? <SignedInHome /> : <PublicHome />
 }
 
 export default Home
