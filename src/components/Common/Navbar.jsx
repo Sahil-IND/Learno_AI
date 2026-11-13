@@ -35,8 +35,12 @@ function Navbar() {
   const { user } = useSelector((state) => state.profile)
   const { totalItems } = useSelector((state) => state.cart)
   const location = useLocation()
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
 
   const [subLinks, setSubLinks] = useState([])
+  const [menuOpen, setMenuOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -159,9 +163,56 @@ function Navbar() {
           )}
           {token !== null && <ProfileDropdown />}
         </div>
-        <button className="mr-4 md:hidden">
+        <button
+          type="button"
+          className="mr-4 md:hidden"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+        >
           <AiOutlineMenu fontSize={24} fill="#AFB2BF" />
         </button>
+        {menuOpen && (
+          <div
+            id="mobile-menu"
+            className="fixed inset-x-0 top-14 z-[999] max-h-[calc(100vh-3.5rem)] overflow-y-auto border-t border-richblack-700 bg-richblack-900 px-6 py-6 md:hidden"
+          >
+            <nav aria-label="Mobile">
+              <ul className="flex flex-col gap-5 text-base text-richblack-25">
+                {NavbarLinks.filter((link) => link.path).map((link) => (
+                  <li key={link.title}>
+                    <Link to={link.path} className={matchRoute(link.path) ? "text-yellow-25" : ""}>
+                      {link.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="mt-8 flex flex-col gap-3 border-t border-richblack-700 pt-6">
+              {user && user?.accountType !== ACCOUNT_TYPE.INSTRUCTOR && (
+                <Link to="/dashboard/cart" className="text-richblack-100">
+                  Cart{totalItems > 0 ? ` (${totalItems})` : ""}
+                </Link>
+              )}
+              {token === null && (
+                <>
+                  <Link to="/login" className="rounded-lg border border-richblack-700 bg-richblack-800 px-4 py-2 text-center text-richblack-100">
+                    Log in
+                  </Link>
+                  <Link to="/signup" className="rounded-lg border border-richblack-700 bg-richblack-800 px-4 py-2 text-center text-richblack-100">
+                    Sign up
+                  </Link>
+                </>
+              )}
+              {token !== null && (
+                <Link to="/dashboard/my-profile" className="rounded-lg border border-richblack-700 bg-richblack-800 px-4 py-2 text-center text-richblack-100">
+                  Dashboard
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

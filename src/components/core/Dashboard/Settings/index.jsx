@@ -1,3 +1,5 @@
+import AppearanceSettings from "./AppearanceSettings"
+import PaymentHistory from "./PaymentHistory"
 import ChangeProfilePicture from "./ChangeProfilePicture"
 import DeleteAccount from "./DeleteAccount"
 import EditProfile from "./EditProfile"
@@ -15,6 +17,10 @@ export default function Settings() {
       <EditProfile />
       {/* Password */}
       <UpdatePassword />
+      {/* Appearance */}
+      <AppearanceSettings />
+      {/* Payment history */}
+      <PaymentHistory />
       {/* Delete Account */}
       <DeleteAccount />
     </>

@@ -79,7 +79,7 @@ export default function EditProfile() {
           <div className="flex flex-col gap-5 lg:flex-row">
             <div className="flex flex-col gap-2 lg:w-[48%]">
               <label htmlFor="dateOfBirth" className="lable-style">
-                Date of Birth
+                Date of Birth (optional)
               </label>
               <input
                 type="date"
@@ -87,10 +87,6 @@ export default function EditProfile() {
                 id="dateOfBirth"
                 className="form-style"
                 {...register("dateOfBirth", {
-                  required: {
-                    value: true,
-                    message: "Please enter your Date of Birth.",
-                  },
                   max: {
                     value: new Date().toISOString().split("T")[0],
                     message: "Date of Birth cannot be in the future.",
@@ -106,14 +102,14 @@ export default function EditProfile() {
             </div>
             <div className="flex flex-col gap-2 lg:w-[48%]">
               <label htmlFor="gender" className="lable-style">
-                Gender
+                Gender (optional)
               </label>
               <select
                 type="text"
                 name="gender"
                 id="gender"
                 className="form-style"
-                {...register("gender", { required: true })}
+                {...register("gender")}
                 defaultValue={user?.additionalDetails?.gender}
               >
                 {genders.map((ele, i) => {
@@ -161,7 +157,7 @@ export default function EditProfile() {
             </div>
             <div className="flex flex-col gap-2 lg:w-[48%]">
               <label htmlFor="about" className="lable-style">
-                About
+                About (optional)
               </label>
               <input
                 type="text"
@@ -169,14 +165,9 @@ export default function EditProfile() {
                 id="about"
                 placeholder="Enter Bio Details"
                 className="form-style"
-                {...register("about", { required: true })}
+                {...register("about")}
                 defaultValue={user?.additionalDetails?.about}
               />
-              {errors.about && (
-                <span className="-mt-1 text-[12px] text-yellow-100">
-                  Please enter your About.
-                </span>
-              )}
             </div>
           </div>
         </div>

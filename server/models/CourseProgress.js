@@ -15,6 +15,13 @@ const courseProgress = new mongoose.Schema({
       ref: "SubSection",
     },
   ],
+  // When each lecture was marked complete. Used for the learning streak.
+  lectureCompletions: [
+    {
+      lecture: { type: mongoose.Schema.Types.ObjectId, ref: "SubSection" },
+      completedAt: { type: Date, default: Date.now },
+    },
+  ],
 })
 
 module.exports = mongoose.model("courseProgress", courseProgress)

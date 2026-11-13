@@ -33,7 +33,7 @@ import Signup from "./pages/Signup"
 import UpdatePassword from "./pages/UpdatePassword"
 import VerifyEmail from "./pages/VerifyEmail"
 import ViewCourse from "./pages/ViewCourse"
-import { getUserDetails } from "./services/operations/profileAPI"
+import ClerkBridge from "./components/core/Auth/ClerkBridge"
 import { ACCOUNT_TYPE } from "./utils/constants"
 
 function App() {
@@ -41,16 +41,10 @@ function App() {
   const navigate = useNavigate()
   const { user } = useSelector((state) => state.profile)
 
-  useEffect(() => {
-    if (localStorage.getItem("token")) {
-      const token = JSON.parse(localStorage.getItem("token"))
-      dispatch(getUserDetails(token, navigate))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-richblack-900 font-inter">
+      <ClerkBridge />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -61,7 +55,7 @@ function App() {
         <Route path="catalog/:catalogName" element={<Catalog />} />
         {/* Open Route - for Only Non Logged in User */}
         <Route
-          path="login"
+          path="login/*"
           element={
             <OpenRoute>
               <Login />
@@ -85,7 +79,7 @@ function App() {
           }
         />
         <Route
-          path="signup"
+          path="signup/*"
           element={
             <OpenRoute>
               <Signup />

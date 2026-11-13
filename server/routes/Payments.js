@@ -6,6 +6,7 @@ const {
   // verifySignature,
   verifyPayment,
   sendPaymentSuccessEmail,
+  getPaymentHistory,
 } = require("../controllers/payments")
 const { auth, isInstructor, isStudent, isAdmin } = require("../middleware/auth")
 router.post("/capturePayment", auth, isStudent, capturePayment)
@@ -17,5 +18,7 @@ router.post(
   sendPaymentSuccessEmail
 )
 // router.post("/verifySignature", verifySignature)
+
+router.get("/history", auth, getPaymentHistory)
 
 module.exports = router

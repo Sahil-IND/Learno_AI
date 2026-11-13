@@ -1,16 +1,7 @@
-import signupImg from "../assets/Images/signup.webp"
-import Template from "../components/core/Auth/Template"
+import ClerkAuthForm from "../components/core/Auth/ClerkAuthForm"
 
 function Signup() {
-  return (
-    <Template
-      title="Join the next generation of students learning with Learno.AI"
-      description1="Build skills for today, tomorrow, and beyond."
-      description2="Education to future-proof your career."
-      image={signupImg}
-      formType="signup"
-    />
-  )
+  return <ClerkAuthForm mode="signup" />
 }
 
 export default Signup

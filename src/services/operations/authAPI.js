@@ -3,6 +3,9 @@ import { toast } from "react-hot-toast"
 import { setLoading, setToken } from "../../slices/authSlice"
 import { resetCart } from "../../slices/cartSlice"
 import { setUser } from "../../slices/profileSlice"
+import { clerkSignOut } from "../clerkBridge"
+import { attachReferral } from "./engagementAPI"
+import { clearStoredReferral, getStoredReferral } from "../../utils/referral"
 import { apiConnector } from "../apiConnector"
 import { endpoints } from "../apis"
 
@@ -10,6 +13,7 @@ const {
   SENDOTP_API,
   SIGNUP_API,
   LOGIN_API,
+  CLERK_SYNC_API,
   RESETPASSTOKEN_API,
   RESETPASSWORD_API,
 } = endpoints
@@ -171,13 +175,46 @@ export function resetPassword(password, confirmPassword, token, navigate) {
 }
 
 export function logout(navigate) {
-  return (dispatch) => {
+  return async (dispatch) => {
     dispatch(setToken(null))
     dispatch(setUser(null))
     dispatch(resetCart())
     localStorage.removeItem("token")
     localStorage.removeItem("user")
+    await clerkSignOut()
     toast.success("Logged Out")
     navigate("/")
+  }
+}
+
+// Loads the local profile for the current Clerk session (creates it on first sign-in).
+export function syncClerkUser() {
+  return async (dispatch) => {
+    dispatch(setLoading(true))
+    try {
+      const response = await apiConnector("POST", CLERK_SYNC_API, {})
+      if (!response.data.success) {
+        throw new Error(response.data.message)
+      }
+      const userImage = response.data?.user?.image
+        ? response.data.user.image
+        : `https://api.dicebear.com/5.x/initials/svg?seed=${response.data.user.firstName} ${response.data.user.lastName}`
+      // The token value is only a "signed in" marker; API calls always attach a fresh Clerk token
+      dispatch(setToken("clerk-session"))
+      const storedReferral = getStoredReferral()
+      if (storedReferral) {
+        await attachReferral(storedReferral)
+        clearStoredReferral()
+      }
+      dispatch(setUser({ ...response.data.user, image: userImage }))
+    } catch (error) {
+      console.log("CLERK SYNC ERROR............", error)
+      toast.error("Could not load your account. Please sign in again.")
+      dispatch(setToken(null))
+      dispatch(setUser(null))
+      // Sign out of Clerk too, so the login page does not send us straight back here
+      await clerkSignOut()
+    }
+    dispatch(setLoading(false))
   }
 }

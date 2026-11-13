@@ -62,3 +62,26 @@ export const generateTeacherCopilot = async ({ topic, type = "quiz" }) => {
     return null
   }
 }
+
+// Starts a summary (or returns the stored one). Returns { data, error } and never shows a toast,
+// so the summary panel can explain what is happening.
+export const requestLectureSummary = async ({ subsectionId, regenerate = false }) => {
+  try {
+    const response = await apiConnector("POST", SUMMARIZE_API, { subsectionId, regenerate })
+    if (!response.data.success) throw new Error(response.data.message)
+    return { data: response.data.data, error: null }
+  } catch (error) {
+    return { data: null, error: error.response?.data?.message || "We couldn't generate the summary right now." }
+  }
+}
+
+// Checks a running summary. Returns { data, error } where data.status is "generating" or "ready".
+export const fetchLectureSummaryStatus = async (subsectionId) => {
+  try {
+    const response = await apiConnector("GET", SUMMARIZE_API, null, null, { subsectionId })
+    if (!response.data.success) throw new Error(response.data.message)
+    return { data: response.data.data, error: null }
+  } catch (error) {
+    return { data: null, error: error.response?.data?.message || "We couldn't load the summary right now." }
+  }
+}

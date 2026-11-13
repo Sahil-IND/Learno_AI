@@ -1,0 +1,51 @@
+/* Theme tokens. Values are RGB triplets so Tailwind can add opacity. */
+:root,
+:root[data-theme="dark"] {
+  --rb-5: 246 247 249;
+  --rb-25: 233 235 239;
+  --rb-50: 218 221 227;
+  --rb-100: 196 200 208;
+  --rb-200: 169 174 184;
+  --rb-300: 141 146 157;
+  --rb-400: 107 112 124;
+  --rb-500: 74 79 90;
+  --rb-600: 50 54 63;
+  --rb-700: 36 39 46;
+  --rb-800: 22 24 29;
+  --rb-900: 14 15 18;
+  --fg: 255 255 255;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --rb-5: 18 18 17;
+  --rb-25: 31 31 29;
+  --rb-50: 47 47 44;
+  --rb-100: 68 68 65;
+  --rb-200: 95 95 90;
+  --rb-300: 125 125 119;
+  --rb-400: 154 154 147;
+  --rb-500: 185 185 178;
+  --rb-600: 212 212 205;
+  --rb-700: 228 228 222;
+  --rb-800: 241 241 236;
+  --rb-900: 250 250 247;
+  --fg: 17 17 17;
+  color-scheme: light;
+}
+
+/* Yellow buttons keep dark text in light mode */
+:root[data-theme="light"] .bg-yellow-50,
+:root[data-theme="light"] .bg-yellow-25,
+:root[data-theme="light"] .bg-yellow-5 {
+  color: rgb(17 17 17) !important;
+}
+
+/* Hide the Google Translate top banner and keep the page in place */
+.goog-te-banner-frame,
+.skiptranslate iframe {
+  display: none !important;
+}
+body {
+  top: 0 !important;
+}

@@ -1,68 +1,46 @@
-const cloudinary = require("cloudinary").v2
 const fs = require("fs")
 const path = require("path")
+const crypto = require("crypto")
 
-exports.uploadImageToCloudinary = async (file, folder, height, quality) => {
-  try {
-    if (
-      process.env.CLOUD_NAME &&
-      process.env.CLOUD_NAME !== "studynotion_cloud" &&
-      process.env.API_KEY &&
-      process.env.API_KEY !== "123456789012345"
-    ) {
-      const options = { folder }
-      if (height) {
-        options.height = height
-      }
-      if (quality) {
-        options.quality = quality
-      }
-      options.resource_type = "auto"
-      console.log("OPTIONS", options)
-      return await cloudinary.uploader.upload(file.tempFilePath, options)
-    }
-  } catch (err) {
-    console.log("Cloudinary upload error, saving locally:", err.message)
+// Media is stored on the server's disk under server/uploads and served at /uploads.
+// Set PUBLIC_BASE_URL when the API is reachable at a different address than localhost.
+const UPLOAD_ROOT = path.join(__dirname, "..", "uploads")
+const PUBLIC_BASE_URL = (
+  process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 4000}`
+).replace(/\/$/, "")
+const IMAGE_EXT = /\.(jpe?g|png|gif|webp)$/i
+const VIDEO_EXT = /\.(mp4|mkv|mov|avi|webm)$/i
+
+// Saves an uploaded file and returns { secure_url, url, duration }.
+// duration is null: the server does not inspect video files, so the caller supplies it.
+exports.uploadMedia = async (file) => {
+  if (!file) {
+    throw new Error("No file was uploaded")
   }
 
-  // Local storage fallback: save file directly into server/uploads
-  const isVideo =
-    file?.mimetype?.startsWith("video") ||
-    file?.name?.match(/\.(mp4|mkv|mov|avi|webm)$/i)
+  const isVideo = file.mimetype?.startsWith("video") || VIDEO_EXT.test(file.name || "")
+  const isImage = file.mimetype?.startsWith("image") || IMAGE_EXT.test(file.name || "")
+  if (!isVideo && !isImage) {
+    throw new Error("Unsupported file type")
+  }
+
   const subFolder = isVideo ? "videos" : "images"
-  const uploadDir = path.join(__dirname, "..", "uploads", subFolder)
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true })
+  const dir = path.join(UPLOAD_ROOT, subFolder)
+  await fs.promises.mkdir(dir, { recursive: true })
+
+  const safeName = `${Date.now()}_${crypto.randomBytes(4).toString("hex")}_${(
+    file.name || "media"
+  ).replace(/[^a-zA-Z0-9._-]/g, "_")}`
+  const target = path.join(dir, safeName)
+
+  if (file.tempFilePath) {
+    await fs.promises.copyFile(file.tempFilePath, target)
+  } else if (typeof file.mv === "function") {
+    await file.mv(target)
+  } else {
+    throw new Error("Uploaded file data is missing")
   }
 
-  const safeFileName = `${Date.now()}_${(file?.name || "media").replace(
-    /[^a-zA-Z0-9._-]/g,
-    "_"
-  )}`
-  const targetPath = path.join(uploadDir, safeFileName)
-
-  try {
-    if (file?.tempFilePath && fs.existsSync(file.tempFilePath)) {
-      fs.copyFileSync(file.tempFilePath, targetPath)
-    } else if (typeof file?.mv === "function") {
-      await file.mv(targetPath)
-    }
-    const localUrl = `http://localhost:4000/uploads/${subFolder}/${safeFileName}`
-    console.log(`[LOCAL STORAGE] Media saved at: ${localUrl}`)
-    return {
-      secure_url: localUrl,
-      url: localUrl,
-      duration: "10:00",
-    }
-  } catch (saveErr) {
-    console.log("Local save error, using default sample:", saveErr.message)
-    const fallbackUrl = isVideo
-      ? "http://localhost:4000/uploads/videos/sample.mp4"
-      : "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60"
-    return {
-      secure_url: fallbackUrl,
-      url: fallbackUrl,
-      duration: "10:00",
-    }
-  }
+  const url = `${PUBLIC_BASE_URL}/uploads/${subFolder}/${safeName}`
+  return { secure_url: url, url, duration: null }
 }
