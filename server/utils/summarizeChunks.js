@@ -1,6 +1,6 @@
 // Summarizes a long transcript in chunks, so each Groq request stays under the model's size limit.
 // Chunk summaries are merged in code (no extra model call), which keeps the cost and request count bounded.
-const { chatCompletion } = require("./groqClient")
+const { chatCompletion, chunkPauseMs } = require("./llm")
 
 // Each request stays well below the per-request token limit that caused the 413 error
 const CHUNK_CHARS = 3000
@@ -8,7 +8,6 @@ const CHUNK_CHARS = 3000
 const MAX_CHUNKS = 10
 const MAX_ITEMS_PER_LIST = 20
 // Pause between excerpts so the per-minute request limit is not hit
-const PAUSE_MS = 25000
 const MAX_ATTEMPTS = 4
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -94,7 +93,7 @@ const summarizeTranscript = async ({ transcript, systemPrompt, context, parseJso
 	const parts = []
 
 	for (let i = 0; i < chunks.length; i++) {
-		if (i > 0) await sleep(PAUSE_MS)
+		if (i > 0) await sleep(chunkPauseMs())
 		try {
 			const raw = await askWithRetry({
 				messages: [
@@ -105,7 +104,7 @@ const summarizeTranscript = async ({ transcript, systemPrompt, context, parseJso
 					},
 				],
 				temperature: 0.1,
-				maxTokens: 1000,
+				maxTokens: 2000,
 				reasoningEffort: "low",
 			})
 			parts.push(parseJson(raw))

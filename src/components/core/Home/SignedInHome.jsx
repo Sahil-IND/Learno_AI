@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react"
 import {
   VscBook,
+  VscChecklist,
+  VscGraph,
   VscChevronLeft,
   VscChevronRight,
   VscCreditCard,
@@ -18,6 +20,7 @@ import { logout } from "../../../services/operations/authAPI"
 import { getUserEnrolledCourses } from "../../../services/operations/profileAPI"
 import ShareButton from "../../Common/ShareButton"
 import { ReferCard, StreakCard } from "./EngagementCards"
+import ChapterTestsCard from "./ChapterTestsCard"
 
 const NAV_COLLAPSED_KEY = "learno-home-nav-collapsed"
 
@@ -44,6 +47,8 @@ const NAV_SECTIONS = [
       { name: "Home", path: "/", icon: VscGlobe, end: true },
       { name: "My Courses", path: "/dashboard/enrolled-courses", icon: VscMortarBoard },
       { name: "Browse Courses", path: "/courses", icon: VscBook },
+      { name: "Test Series", path: "/tests", icon: VscChecklist },
+      { name: "Leaderboard", path: "/leaderboard", icon: VscGraph },
     ],
   },
   {
@@ -70,7 +75,7 @@ const firstLectureLink = (course) => {
   return `/view-course/${course._id}/section/${section._id}/sub-section/${section.subSection[0]._id}`
 }
 
-function StudentNav({ collapsed, onToggle }) {
+export function StudentNav({ collapsed, onToggle }) {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -263,6 +268,8 @@ export default function SignedInHome() {
           <StatTile label="Completed courses" value={stats.completed} />
           <StatTile label="Average progress" value={`${stats.average}%`} />
         </section>
+
+        <ChapterTestsCard />
 
         <section aria-label="Streak and referral" className="mb-10 grid gap-4 lg:grid-cols-2">
           <StreakCard />
