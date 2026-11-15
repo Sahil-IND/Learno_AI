@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 const Course = require("../models/Course")
 const Section = require("../models/Section")
 const SubSection = require("../models/Subsection")
-const { chatCompletion } = require("../utils/groqClient")
+const { chatCompletion } = require("../utils/llm")
 const { fetchLectureTranscript } = require("../utils/transcript")
 const { summarizeTranscript } = require("../utils/summarizeChunks")
 const { pickRelevantExcerpts, MAX_EXCERPTS } = require("../utils/retrieval")
@@ -53,12 +53,14 @@ const canAccessCourse = (course, user) => {
 }
 
 const parseJsonObject = (text) => {
-	const start = text.indexOf("{")
-	const end = text.lastIndexOf("}")
+	// Reasoning models may put their thinking before the answer; drop it before reading the JSON
+	const cleaned = String(text).replace(/<think>[\s\S]*?<\/think>/gi, "")
+	const start = cleaned.indexOf("{")
+	const end = cleaned.lastIndexOf("}")
 	if (start === -1 || end === -1) {
 		throw new Error("AI response was not JSON")
 	}
-	return JSON.parse(text.slice(start, end + 1))
+	return JSON.parse(cleaned.slice(start, end + 1))
 }
 
 // Course-aware doubt solver. Answers only from the lecture's own description and course metadata.

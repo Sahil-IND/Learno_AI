@@ -116,7 +116,10 @@ exports.getAllUserDetails = async (req, res) => {
 
 exports.updateDisplayPicture = async (req, res) => {
   try {
-    const displayPicture = req.files.displayPicture
+    const displayPicture = req.files?.displayPicture
+    if (!displayPicture) {
+      return res.status(400).json({ success: false, message: "Please choose an image to upload" })
+    }
     const userId = req.user.id
     const image = await uploadMedia(
       displayPicture,

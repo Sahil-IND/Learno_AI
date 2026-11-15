@@ -2,6 +2,7 @@ import { toast } from "react-hot-toast"
 
 import { setUser } from "../../slices/profileSlice"
 import { apiConnector } from "../apiConnector"
+import { getClerkToken } from "../clerkBridge"
 import { settingsEndpoints } from "../apis"
 import { logout } from "./authAPI"
 
@@ -16,14 +17,19 @@ export function updateDisplayPicture(token, formData) {
   return async (dispatch) => {
     const toastId = toast.loading("Loading...")
     try {
-      const response = await apiConnector(
-        "PUT",
-        UPDATE_DISPLAY_PICTURE_API,
-        formData,
-        {
-          Authorization: `Bearer ${token}`,
-        }
-      )
+      const clerkToken = await getClerkToken()
+      const httpResponse = await fetch(UPDATE_DISPLAY_PICTURE_API, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${clerkToken || token}` },
+        body: formData,
+      })
+      const body = await httpResponse.json().catch(() => ({}))
+      if (!httpResponse.ok) {
+        const error = new Error(body.message || "Upload failed")
+        error.response = { status: httpResponse.status, data: body }
+        throw error
+      }
+      const response = { data: body }
       console.log(
         "UPDATE_DISPLAY_PICTURE_API API RESPONSE............",
         response
@@ -36,7 +42,10 @@ export function updateDisplayPicture(token, formData) {
       dispatch(setUser(response.data.data))
     } catch (error) {
       console.log("UPDATE_DISPLAY_PICTURE_API API ERROR............", error)
-      toast.error("Could Not Update Display Picture")
+      const status = error.response?.status
+      const serverMessage = error.response?.data?.message
+      console.log("DISPLAY PICTURE STATUS", status, serverMessage)
+      toast.error(serverMessage ? "Could Not Update Display Picture: " + serverMessage : "Could Not Update Display Picture")
     }
     toast.dismiss(toastId)
   }

@@ -17,6 +17,10 @@ import Instructor from "./components/core/Dashboard/Instructor"
 import MyCourses from "./components/core/Dashboard/MyCourses"
 import MyProfile from "./components/core/Dashboard/MyProfile"
 import Settings from "./components/core/Dashboard/Settings"
+import Leaderboard from "./pages/Leaderboard"
+import StudentLayout from "./components/core/Home/StudentLayout"
+import TestSeries from "./pages/TestSeries"
+import TestTake from "./pages/TestTake"
 import VideoDetails from "./components/core/ViewCourse/VideoDetails"
 import About from "./pages/About"
 import Catalog from "./pages/Catalog"
@@ -52,6 +56,9 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="courses/:courseId" element={<CourseDetails />} />
+        <Route path="tests" element={<PrivateRoute><StudentLayout><TestSeries /></StudentLayout></PrivateRoute>} />
+        <Route path="tests/:testId" element={<PrivateRoute><StudentLayout><TestTake /></StudentLayout></PrivateRoute>} />
+        <Route path="leaderboard" element={<PrivateRoute><StudentLayout><Leaderboard /></StudentLayout></PrivateRoute>} />
         <Route path="catalog/:catalogName" element={<Catalog />} />
         {/* Open Route - for Only Non Logged in User */}
         <Route
