@@ -4,6 +4,7 @@ const CourseProgress = require("../models/CourseProgress")
 const Course = require("../models/Course")
 const User = require("../models/User")
 const { uploadMedia } = require("../utils/imageUploader")
+const { instructorFieldsFor } = require("../utils/instructorAccess")
 const mongoose = require("mongoose")
 const { convertSecondsToDuration } = require("../utils/secToDuration")
 // Method for updating a profile
@@ -43,10 +44,13 @@ exports.updateProfile = async (req, res) => {
       .populate("additionalDetails")
       .exec()
 
+    // Keeps instructorApproved in the response, so the teacher tools stay open after an edit
     return res.json({
       success: true,
       message: "Profile updated successfully",
-      updatedUserDetails,
+      updatedUserDetails: updatedUserDetails
+        ? { ...updatedUserDetails.toJSON(), ...(await instructorFieldsFor(updatedUserDetails)) }
+        : null,
     })
   } catch (error) {
     console.log(error)
@@ -100,11 +104,14 @@ exports.getAllUserDetails = async (req, res) => {
     const userDetails = await User.findById(id)
       .populate("additionalDetails")
       .exec()
-    console.log(userDetails)
+    // Adds instructorApproved, so the app shows teacher tools only after approval
+    const data = userDetails
+      ? { ...userDetails.toJSON(), ...(await instructorFieldsFor(userDetails)) }
+      : null
     res.status(200).json({
       success: true,
       message: "User Data fetched successfully",
-      data: userDetails,
+      data,
     })
   } catch (error) {
     return res.status(500).json({
@@ -114,34 +121,43 @@ exports.getAllUserDetails = async (req, res) => {
   }
 }
 
+const MAX_PICTURE_BYTES = 5 * 1024 * 1024
+const PICTURE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+// PUT /profile/updateDisplayPicture: saves the picture and returns the updated user
 exports.updateDisplayPicture = async (req, res) => {
   try {
     const displayPicture = req.files?.displayPicture
     if (!displayPicture) {
       return res.status(400).json({ success: false, message: "Please choose an image to upload" })
     }
-    const userId = req.user.id
-    const image = await uploadMedia(
-      displayPicture,
-      process.env.FOLDER_NAME,
-      1000,
-      1000
-    )
-    console.log(image)
-    const updatedProfile = await User.findByIdAndUpdate(
-      { _id: userId },
+    if (!PICTURE_TYPES.includes(displayPicture.mimetype)) {
+      return res.status(400).json({ success: false, message: "Please upload a JPG, PNG, GIF or WebP image" })
+    }
+    if (displayPicture.size > MAX_PICTURE_BYTES) {
+      return res.status(400).json({ success: false, message: "Please choose an image under 5 MB" })
+    }
+
+    const image = await uploadMedia(displayPicture)
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
       { image: image.secure_url },
       { new: true }
-    )
-    res.send({
+    ).populate("additionalDetails")
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" })
+    }
+
+    return res.status(200).json({
       success: true,
-      message: `Image Updated successfully`,
-      data: updatedProfile,
+      message: "Image Updated successfully",
+      data: { ...updatedUser.toJSON(), ...(await instructorFieldsFor(updatedUser)) },
     })
   } catch (error) {
+    console.error("updateDisplayPicture failed:", error.message)
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Could not save your picture. Please try again.",
     })
   }
 }

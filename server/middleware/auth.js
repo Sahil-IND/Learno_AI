@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const { verifyClerkSession } = require("../utils/clerkAuth");
+const { instructorFieldsFor } = require("../utils/instructorAccess");
 
 // Authenticates a request with a Clerk session token (Authorization: Bearer <token>).
 // Clerk is the only auth provider; there are no app-issued JWTs.
@@ -45,4 +46,26 @@ const requireRole = (role) => async (req, res, next) => {
 
 exports.isStudent = requireRole("Student");
 exports.isAdmin = requireRole("Admin");
-exports.isInstructor = requireRole("Instructor");
+// Teacher routes: the account must be an Instructor AND have an approved application
+const requireApprovedInstructor = async (req, res, next) => {
+	try {
+		const userDetails = await User.findById(req.user.id);
+		if (!userDetails) {
+			return res.status(401).json({ success: false, message: "User not found" });
+		}
+		const { instructorApproved } = await instructorFieldsFor(userDetails);
+		if (!instructorApproved) {
+			return res.status(403).json({
+				success: false,
+				message: "Teacher tools open only after your instructor application is approved",
+			});
+		}
+		next();
+	} catch (error) {
+		return res
+			.status(500)
+			.json({ success: false, message: "Instructor access can't be verified" });
+	}
+};
+
+exports.isInstructor = requireApprovedInstructor;

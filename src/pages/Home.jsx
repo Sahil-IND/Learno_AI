@@ -1,6 +1,7 @@
 // Icons Import
 import { FaArrowRight } from "react-icons/fa"
 import { useSelector } from "react-redux"
+import { Navigate } from "react-router-dom"
 
 import SignedInHome from "../components/core/Home/SignedInHome"
 
@@ -186,9 +187,14 @@ function PublicHome() {
   )
 }
 
-// Signed-in students get the student home; visitors get the landing page
+// Signed-in instructors land on their dashboard, students get the student home, visitors get the landing page
 function Home() {
   const { token } = useSelector((state) => state.auth)
+  const { user } = useSelector((state) => state.profile)
+
+  if (token !== null && user?.instructorApproved) {
+    return <Navigate to="/dashboard/instructor" replace />
+  }
   return token !== null ? <SignedInHome /> : <PublicHome />
 }
 

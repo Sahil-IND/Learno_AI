@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const { getClerkIdentity } = require("../utils/clerkAuth");
 const InstructorApplication = require("../models/InstructorApplication");
+const { instructorFieldsFor } = require("../utils/instructorAccess");
 
 // Clerk sign-in sync: verifies the Clerk session, links or creates the local account,
 // and returns the user. Clerk is the only auth provider; no app-issued token is returned.
@@ -353,9 +354,12 @@ exports.clerkSync = async (req, res) => {
 		}
 
 		user.password = undefined;
-		return res
-			.status(200)
-			.json({ success: true, user, message: "Clerk sign-in successful" });
+		const instructorFields = await instructorFieldsFor(user);
+		return res.status(200).json({
+			success: true,
+			user: { ...user.toJSON(), ...instructorFields },
+			message: "Clerk sign-in successful",
+		});
 	} catch (error) {
 		console.error("clerkSync failed:", error.message);
 		return res.status(500).json({ success: false, message: "Could not sign in with Clerk" });

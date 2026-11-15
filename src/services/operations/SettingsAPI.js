@@ -13,41 +13,36 @@ const {
   DELETE_PROFILE_API,
 } = settingsEndpoints
 
-export function updateDisplayPicture(token, formData) {
+// Uploads a new display picture. The server returns the full updated user, so the
+// teacher tools stay open after the change. Only the Clerk session token is sent.
+export function updateDisplayPicture(_token, formData) {
   return async (dispatch) => {
-    const toastId = toast.loading("Loading...")
+    const toastId = toast.loading("Uploading...")
     try {
       const clerkToken = await getClerkToken()
+      if (!clerkToken) {
+        throw new Error("Please sign in again, then try once more.")
+      }
       const httpResponse = await fetch(UPDATE_DISPLAY_PICTURE_API, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${clerkToken || token}` },
+        headers: { Authorization: `Bearer ${clerkToken}` },
         body: formData,
       })
       const body = await httpResponse.json().catch(() => ({}))
-      if (!httpResponse.ok) {
-        const error = new Error(body.message || "Upload failed")
-        error.response = { status: httpResponse.status, data: body }
-        throw error
+      if (!httpResponse.ok || !body.success) {
+        throw new Error(body.message || "Upload failed. Please try again.")
       }
-      const response = { data: body }
-      console.log(
-        "UPDATE_DISPLAY_PICTURE_API API RESPONSE............",
-        response
-      )
-
-      if (!response.data.success) {
-        throw new Error(response.data.message)
-      }
-      toast.success("Display Picture Updated Successfully")
-      dispatch(setUser(response.data.data))
+      dispatch(setUser(body.data))
+      toast.success("Display picture updated")
     } catch (error) {
-      console.log("UPDATE_DISPLAY_PICTURE_API API ERROR............", error)
-      const status = error.response?.status
-      const serverMessage = error.response?.data?.message
-      console.log("DISPLAY PICTURE STATUS", status, serverMessage)
-      toast.error(serverMessage ? "Could Not Update Display Picture: " + serverMessage : "Could Not Update Display Picture")
+      const reason =
+        error instanceof TypeError
+          ? "Could not reach the server. Check that the backend is running."
+          : error.message
+      toast.error(`Could not update display picture: ${reason}`)
+    } finally {
+      toast.dismiss(toastId)
     }
-    toast.dismiss(toastId)
   }
 }
 

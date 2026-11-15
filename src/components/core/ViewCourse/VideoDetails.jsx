@@ -14,6 +14,7 @@ import { markLectureAsComplete } from "../../../services/operations/courseDetail
 import { updateCompletedLectures } from "../../../slices/viewCourseSlice"
 import IconBtn from "../../Common/IconBtn"
 import AiLectureAssistant from "./AiLectureAssistant"
+import LectureEngagement from "./LectureEngagement"
 
 const VideoDetails = () => {
   const { courseId, sectionId, subSectionId } = useParams()
@@ -333,6 +334,11 @@ const VideoDetails = () => {
         <p className="text-sm text-richblack-300 leading-relaxed max-w-4xl">
           {videoData?.description}
         </p>
+      </div>
+
+      {/* Likes, dislikes and comments for this lecture */}
+      <div className="border-b border-richblack-700 pb-6">
+        <LectureEngagement subSectionId={subSectionId} />
       </div>
 
       {/* AI Features: Lecture Summarizer, RAG Doubt Solver & Copilot */}

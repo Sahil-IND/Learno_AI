@@ -14,6 +14,9 @@ import Cart from "./components/core/Dashboard/Cart"
 import EditCourse from "./components/core/Dashboard/EditCourse"
 import EnrolledCourses from "./components/core/Dashboard/EnrolledCourses"
 import Instructor from "./components/core/Dashboard/Instructor"
+import InstructorEngagement from "./components/core/Dashboard/InstructorDashboard/InstructorEngagement"
+import InstructorReviews from "./components/core/Dashboard/InstructorDashboard/InstructorReviews"
+import InstructorStudents from "./components/core/Dashboard/InstructorDashboard/InstructorStudents"
 import MyCourses from "./components/core/Dashboard/MyCourses"
 import MyProfile from "./components/core/Dashboard/MyProfile"
 import Settings from "./components/core/Dashboard/Settings"
@@ -113,11 +116,16 @@ function App() {
           <Route path="dashboard/my-profile" element={<MyProfile />} />
           <Route path="dashboard/Settings" element={<Settings />} />
           {/* Route only for Instructors */}
-          {user?.accountType === ACCOUNT_TYPE.INSTRUCTOR && (
+          {/* The page itself sends unapproved accounts back to their profile */}
+          <Route path="dashboard/instructor" element={<Instructor />} />
+          {/* Teaching tools open only after the instructor application is approved */}
+          {user?.instructorApproved && (
             <>
-              <Route path="dashboard/instructor" element={<Instructor />} />
               <Route path="dashboard/my-courses" element={<MyCourses />} />
               <Route path="dashboard/add-course" element={<AddCourse />} />
+              <Route path="dashboard/students" element={<InstructorStudents />} />
+              <Route path="dashboard/reviews" element={<InstructorReviews />} />
+              <Route path="dashboard/engagement" element={<InstructorEngagement />} />
               <Route
                 path="dashboard/edit-course/:courseId"
                 element={<EditCourse />}
