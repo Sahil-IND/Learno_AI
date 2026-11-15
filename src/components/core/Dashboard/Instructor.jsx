@@ -1,142 +1,106 @@
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
-import { Link } from "react-router-dom"
+import { Link, Navigate } from "react-router-dom"
 
-import { fetchInstructorCourses } from "../../../services/operations/courseDetailsAPI"
-import { getInstructorData } from "../../../services/operations/profileAPI"
-import InstructorChart from "./InstructorDashboard/InstructorChart"
+import { fetchInstructorDashboard } from "../../../services/operations/instructorAPI"
+import { CoursePerformance, TestResultsCard } from "./InstructorDashboard/CoursePerformance"
+import { PerformanceChart, WeakLecturesCard } from "./InstructorDashboard/InstructorCharts"
+import {
+  RecentPaymentsCard,
+  SummaryCards,
+  TopLearnersCard,
+  WeeklyActivityCard,
+} from "./InstructorDashboard/InstructorOverview"
 
+// Instructor home: teaching stats from the database. Opens only after the instructor application is approved.
 export default function Instructor() {
-  const { token } = useSelector((state) => state.auth)
   const { user } = useSelector((state) => state.profile)
-  const [loading, setLoading] = useState(false)
-  const [instructorData, setInstructorData] = useState(null)
-  const [courses, setCourses] = useState([])
+  const approved = user?.instructorApproved === true
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [dashboard, setDashboard] = useState(null)
 
   useEffect(() => {
-    ;(async () => {
-      setLoading(true)
-      const instructorApiData = await getInstructorData(token)
-      const result = await fetchInstructorCourses(token)
-      console.log(instructorApiData)
-      if (instructorApiData.length) setInstructorData(instructorApiData)
-      if (result) {
-        setCourses(result)
-      }
+    if (!approved) return undefined
+    let cancelled = false
+    fetchInstructorDashboard().then((result) => {
+      if (cancelled) return
+      if (result.error) setError(result.error)
+      else setDashboard(result.data)
       setLoading(false)
-    })()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [approved])
 
-  const totalAmount = instructorData?.reduce(
-    (acc, curr) => acc + curr.totalAmountGenerated,
-    0
-  )
-
-  const totalStudents = instructorData?.reduce(
-    (acc, curr) => acc + curr.totalStudentsEnrolled,
-    0
-  )
+  if (!user) {
+    return (
+      <div className="grid place-items-center py-24">
+        <div className="spinner" aria-label="Loading your dashboard"></div>
+      </div>
+    )
+  }
+  if (!approved) return <Navigate to="/dashboard/my-profile" replace />
 
   return (
-    <div>
-      <div className="space-y-2">
-        <h1 className="text-2xl font-bold text-richblack-5">
-          Hi {user?.firstName} 👋
-        </h1>
-        <p className="font-medium text-richblack-200">
-          Let's start something new
-        </p>
-      </div>
-      {loading ? (
-        <div className="spinner"></div>
-      ) : courses.length > 0 ? (
+    <div className="flex flex-col gap-8 text-richblack-100">
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="my-6 flex flex-col lg:flex-row gap-6 min-h-[420px]">
-            {/* Render chart / graph */}
-            {totalAmount > 0 || totalStudents > 0 ? (
-              <InstructorChart courses={instructorData} />
-            ) : (
-              <div className="flex-1 rounded-xl border border-richblack-700 bg-richblack-800 p-6 flex flex-col justify-center items-center">
-                <p className="text-xl font-bold text-richblack-5">Course Analytics</p>
-                <p className="mt-4 text-base font-medium text-richblack-400">
-                  Not Enough Data To Visualize
-                </p>
-              </div>
-            )}
-            {/* Total Statistics */}
-            <div className="flex min-w-[280px] flex-col justify-between rounded-xl border border-richblack-700 bg-richblack-800 p-6">
-              <p className="text-xl font-bold text-richblack-5">Statistics</p>
-              <div className="my-4 flex flex-col gap-6">
-                <div className="rounded-lg bg-richblack-900/60 p-4 border border-richblack-700/60">
-                  <p className="text-sm font-medium text-richblack-300">Total Courses</p>
-                  <p className="text-3xl font-extrabold text-richblack-5 mt-1">
-                    {courses.length}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-richblack-900/60 p-4 border border-richblack-700/60">
-                  <p className="text-sm font-medium text-richblack-300">Total Students</p>
-                  <p className="text-3xl font-extrabold text-yellow-50 mt-1">
-                    {totalStudents}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-richblack-900/60 p-4 border border-richblack-700/60">
-                  <p className="text-sm font-medium text-richblack-300">Total Revenue</p>
-                  <p className="text-3xl font-extrabold text-caribbeangreen-200 mt-1">
-                    ₹{totalAmount}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-md bg-richblack-800 p-6">
-            {/* Render 3 courses */}
-            <div className="flex items-center justify-between">
-              <p className="text-lg font-bold text-richblack-5">Your Courses</p>
-              <Link to="/dashboard/my-courses">
-                <p className="text-xs font-semibold text-yellow-50">View All</p>
-              </Link>
-            </div>
-            <div className="my-4 flex items-start space-x-6">
-              {courses.slice(0, 3).map((course) => (
-                <div key={course._id} className="w-1/3">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.courseName}
-                    className="h-[201px] w-full rounded-md object-cover"
-                  />
-                  <div className="mt-3 w-full">
-                    <p className="text-sm font-medium text-richblack-50">
-                      {course.courseName}
-                    </p>
-                    <div className="mt-1 flex items-center space-x-2">
-                      <p className="text-xs font-medium text-richblack-300">
-                        {course.studentsEnroled.length} students
-                      </p>
-                      <p className="text-xs font-medium text-richblack-300">
-                        |
-                      </p>
-                      <p className="text-xs font-medium text-richblack-300">
-                        Rs. {course.price}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold text-richblack-5">Hi {user?.firstName} 👋</h1>
+          <p className="mt-1 text-sm text-richblack-300">Here is how your courses are doing.</p>
         </div>
-      ) : (
-        <div className="mt-20 rounded-md bg-richblack-800 p-6 py-20">
-          <p className="text-center text-2xl font-bold text-richblack-5">
-            You have not created any courses yet
+        <Link
+          to="/dashboard/add-course"
+          className="rounded-lg bg-yellow-50 px-5 py-2.5 text-sm font-semibold text-richblack-900 hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-50"
+        >
+          Add course
+        </Link>
+      </header>
+
+      {loading ? (
+        <div className="grid place-items-center py-24">
+          <div className="spinner" aria-label="Loading your dashboard"></div>
+        </div>
+      ) : error ? (
+        <p role="alert" className="rounded-xl border border-pink-700 bg-pink-900/30 p-5 text-sm text-pink-100">
+          {error}
+        </p>
+      ) : dashboard.summary.totalCourses === 0 ? (
+        <section className="rounded-xl border border-dashed border-richblack-600 bg-richblack-800 p-10 text-center">
+          <p className="text-xl font-bold text-richblack-5">You have not created any courses yet</p>
+          <p className="mt-2 text-sm text-richblack-300">
+            Once you publish a course, its students, progress, ratings and test results show up here.
           </p>
-          <Link to="/dashboard/add-course">
-            <p className="mt-1 text-center text-lg font-semibold text-yellow-50">
-              Create a course
-            </p>
+          <Link to="/dashboard/add-course" className="mt-6 inline-block text-sm font-semibold text-yellow-50 hover:underline">
+            Create your first course
           </Link>
-        </div>
+        </section>
+      ) : (
+        <>
+          <SummaryCards summary={dashboard.summary} />
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <WeeklyActivityCard weekly={dashboard.weekly} />
+            </div>
+            <TopLearnersCard learners={dashboard.topLearners} />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <RecentPaymentsCard payments={dashboard.recentPayments} />
+            <TestResultsCard tests={dashboard.tests} />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <PerformanceChart courses={dashboard.courses} />
+            </div>
+            <WeakLecturesCard courses={dashboard.courses} />
+          </div>
+
+          <CoursePerformance courses={dashboard.courses} />
+        </>
       )}
     </div>
   )

@@ -9,6 +9,7 @@ const crypto = require("crypto")
 const path = require("path")
 
 const User = require("../models/User")
+const InstructorApplication = require("../models/InstructorApplication")
 const Profile = require("../models/Profile")
 const Course = require("../models/Course")
 const Section = require("../models/Section")
@@ -165,6 +166,15 @@ const run = async () => {
   console.log(`Removed demo courses: ${removed}`)
 
   const instructor = await ensureUser({ ...INSTRUCTOR, accountType: "Instructor" })
+  // Teacher tools need an approved application, so the seeded teacher gets one
+  await InstructorApplication.updateOne(
+    { email: INSTRUCTOR.email },
+    {
+      $set: { status: "approved", reviewedAt: new Date(), firstName: INSTRUCTOR.firstName, lastName: INSTRUCTOR.lastName },
+      $setOnInsert: { submittedAt: new Date(), expertise: [], yearsOfExperience: 0 },
+    },
+    { upsert: true }
+  )
   const courses = {}
   for (const spec of COURSES) {
     courses[spec.group] = await importCourse(spec, instructor._id)

@@ -11,6 +11,7 @@ const contactUsRoute = require("./routes/Contact");
 const aiGroqRoutes = require("./routes/aiGroq");
 const engagementRoutes = require("./routes/engagement");
 const instructorApplicationRoutes = require("./routes/instructorApplication");
+const instructorDashboardRoutes = require("./routes/instructorDashboard");
 const testRoutes = require("./routes/tests");
 const database = require("./config/database");
 const cookieParser = require("cookie-parser");
@@ -59,6 +60,7 @@ app.use("/api/v1/reach", contactUsRoute);
 app.use("/api/v1/ai", aiGroqRoutes);
 app.use("/api/v1/engagement", engagementRoutes);
 app.use("/api/v1/instructor", instructorApplicationRoutes);
+app.use("/api/v1/instructor", instructorDashboardRoutes);
 app.use("/api/v1/tests", testRoutes);
 
 // Testing the server

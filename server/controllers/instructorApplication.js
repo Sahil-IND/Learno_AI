@@ -152,6 +152,9 @@ exports.decideApplication = async (req, res) => {
 
     if (decision === "approve") {
       await User.updateOne({ email: application.email }, { accountType: "Instructor" })
+    } else {
+      // A rejected applicant goes back to being a student, so teacher tools close
+      await User.updateOne({ email: application.email, accountType: "Instructor" }, { accountType: "Student" })
     }
 
     return res.status(200).json({ success: true, data: present(application) })

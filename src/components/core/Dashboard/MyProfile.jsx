@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
 import { Link } from "react-router-dom"
 
-import { fetchStreak } from "../../../services/operations/engagementAPI"
+import { fetchInstructorDashboard } from "../../../services/operations/instructorAPI"
 import { fetchLeaderboard } from "../../../services/operations/testsAPI"
 import { formattedDate } from "../../../utils/dateFormatter"
 
@@ -23,21 +23,26 @@ const Detail = ({ label, value }) => (
 // Profile overview: who the student is and how they are doing. Editing happens in Settings.
 export default function MyProfile() {
   const { user } = useSelector((state) => state.profile)
-  const [streak, setStreak] = useState(null)
   const [board, setBoard] = useState(null)
+  const [teaching, setTeaching] = useState(null)
+  const approved = user?.instructorApproved === true
 
+  // Teachers see teaching numbers; students see learning numbers
   useEffect(() => {
     let cancelled = false
-    fetchStreak().then((data) => {
-      if (!cancelled) setStreak(data)
-    })
-    fetchLeaderboard().then(({ data }) => {
-      if (!cancelled) setBoard(data)
-    })
+    if (approved) {
+      fetchInstructorDashboard().then((result) => {
+        if (!cancelled && result.data) setTeaching(result.data.summary)
+      })
+    } else {
+      fetchLeaderboard().then(({ data }) => {
+        if (!cancelled) setBoard(data)
+      })
+    }
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [approved])
 
   const about = user?.additionalDetails?.about
   const dateOfBirth = user?.additionalDetails?.dateOfBirth
@@ -69,13 +74,20 @@ export default function MyProfile() {
         </Link>
       </section>
 
-      <section aria-label="Your progress" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Stat label="Courses enrolled" value={user?.courses?.length ?? 0} />
-        <Stat label="Learning streak" value={streak ? `${streak.currentStreak} day${streak.currentStreak === 1 ? "" : "s"}` : "—"} />
-        <Stat label="Your rank" value={board?.me?.rank ? `#${board.me.rank}` : "Not ranked"} />
-        <Stat label="Points" value={board ? board.me.points : "—"} />
-        <Stat label="Lectures completed" value={board ? board.me.lecturesCompleted : "—"} />
-        <Stat label="Tests taken" value={board ? board.me.testsTaken : "—"} />
+      <section aria-label="Your progress" className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        {approved ? (
+          <>
+            <Stat label="Courses created" value={teaching ? teaching.totalCourses : "—"} />
+            <Stat label="Students" value={teaching ? teaching.totalStudents : "—"} />
+            <Stat label="Average rating" value={teaching ? (teaching.averageRating ?? "—") : "—"} />
+          </>
+        ) : (
+          <>
+            <Stat label="Courses enrolled" value={user?.courses?.length ?? 0} />
+            <Stat label="Lectures completed" value={board ? board.me.lecturesCompleted : "—"} />
+            <Stat label="Tests taken" value={board ? board.me.testsTaken : "—"} />
+          </>
+        )}
       </section>
 
       <section className="rounded-xl border border-richblack-700 bg-richblack-800 p-6 md:p-8">
