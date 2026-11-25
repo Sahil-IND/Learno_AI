@@ -1,24 +1,20 @@
 import { FaCheck } from "react-icons/fa"
 import { useSelector } from "react-redux"
 
-import CourseBuilderForm from "./CourseBuilder/CourseBuilderForm"
+import ClassesForm from "./CourseBuilder/ClassesForm"
 import CourseInformationForm from "./CourseInformation/CourseInformationForm"
 import PublishCourse from "./PublishCourse"
 
 export default function RenderSteps() {
-  const { step } = useSelector((state) => state.course)
+  const { step, editCourse, course } = useSelector((state) => state.course)
 
   const steps = [
     {
       id: 1,
-      title: "Course Information",
+      title: "Course information",
     },
     {
       id: 2,
-      title: "Course Builder",
-    },
-    {
-      id: 3,
       title: "Publish",
     },
   ]
@@ -82,8 +78,8 @@ export default function RenderSteps() {
       </div>
       {/* Render specific component based on current step */}
       {step === 1 && <CourseInformationForm />}
-      {step === 2 && <CourseBuilderForm />}
-      {step === 3 && <PublishCourse />}
+      {step === 1 && editCourse && course?._id && <ClassesForm />}
+      {step === 2 && <PublishCourse />}
     </>
   )
 }

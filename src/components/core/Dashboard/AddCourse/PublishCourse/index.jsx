@@ -24,7 +24,7 @@ export default function PublishCourse() {
   }, [])
 
   const goBack = () => {
-    dispatch(setStep(2))
+    dispatch(setStep(1))
   }
 
   const goToCourses = () => {

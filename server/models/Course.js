@@ -12,6 +12,10 @@ const coursesSchema = new mongoose.Schema({
   whatYouWillLearn: {
     type: String,
   },
+  // Course preview video, uploaded when the course is created
+  introVideoUrl: {
+    type: String,
+  },
   courseContent: [
     {
       type: mongoose.Schema.Types.ObjectId,
