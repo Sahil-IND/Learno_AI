@@ -73,10 +73,10 @@ exports.getLectureEngagement = async (req, res) => {
     }
     const course = await courseForLecture(subsectionId)
     if (!course) return res.status(404).json({ success: false, message: "Lecture not found" })
-    if (!canEngage(course, req.user.id)) {
+    if (!canEngage(course, String(req.user.id))) {
       return res.status(403).json({ success: false, message: "Enroll in this course to see and join the discussion" })
     }
-    return res.status(200).json({ success: true, data: await lectureState(subsectionId, req.user.id) })
+    return res.status(200).json({ success: true, data: await lectureState(subsectionId, String(req.user.id)) })
   } catch (error) {
     console.error("getLectureEngagement failed:", error.message)
     return res.status(500).json({ success: false, message: "Could not load the lecture discussion" })
@@ -96,20 +96,20 @@ exports.setLectureReaction = async (req, res) => {
     }
     const course = await courseForLecture(subsectionId)
     if (!course) return res.status(404).json({ success: false, message: "Lecture not found" })
-    if (!canEngage(course, req.user.id)) {
+    if (!canEngage(course, String(req.user.id))) {
       return res.status(403).json({ success: false, message: "Enroll in this course to react" })
     }
 
     if (value === "none") {
-      await LectureReaction.deleteOne({ subsection: subsectionId, user: req.user.id })
+      await LectureReaction.deleteOne({ subsection: subsectionId, user: String(req.user.id) })
     } else {
       await LectureReaction.updateOne(
-        { subsection: subsectionId, user: req.user.id },
+        { subsection: subsectionId, user: String(req.user.id) },
         { $set: { value, course: course._id } },
         { upsert: true }
       )
     }
-    return res.status(200).json({ success: true, data: await lectureState(subsectionId, req.user.id) })
+    return res.status(200).json({ success: true, data: await lectureState(subsectionId, String(req.user.id)) })
   } catch (error) {
     console.error("setLectureReaction failed:", error.message)
     return res.status(500).json({ success: false, message: "Could not save your reaction" })
@@ -130,17 +130,17 @@ exports.addLectureComment = async (req, res) => {
     }
     const course = await courseForLecture(subsectionId)
     if (!course) return res.status(404).json({ success: false, message: "Lecture not found" })
-    if (!canEngage(course, req.user.id)) {
+    if (!canEngage(course, String(req.user.id))) {
       return res.status(403).json({ success: false, message: "Enroll in this course to comment" })
     }
 
     await LectureComment.create({
-      user: req.user.id,
+      user: String(req.user.id),
       subsection: subsectionId,
       course: course._id,
       text,
     })
-    return res.status(201).json({ success: true, data: await lectureState(subsectionId, req.user.id) })
+    return res.status(201).json({ success: true, data: await lectureState(subsectionId, String(req.user.id)) })
   } catch (error) {
     console.error("addLectureComment failed:", error.message)
     return res.status(500).json({ success: false, message: "Could not post your comment" })
@@ -158,14 +158,14 @@ exports.deleteLectureComment = async (req, res) => {
     if (!comment) return res.status(404).json({ success: false, message: "Comment not found" })
 
     const course = await Course.findById(comment.course).select("instructor").lean()
-    const isAuthor = String(comment.user) === req.user.id
-    const isTeacher = course && String(course.instructor) === req.user.id
+    const isAuthor = String(comment.user) === String(req.user.id)
+    const isTeacher = course && String(course.instructor) === String(req.user.id)
     if (!isAuthor && !isTeacher) {
       return res.status(403).json({ success: false, message: "You can only delete your own comments" })
     }
 
     await LectureComment.deleteOne({ _id: commentId })
-    return res.status(200).json({ success: true, data: await lectureState(String(comment.subsection), req.user.id) })
+    return res.status(200).json({ success: true, data: await lectureState(String(comment.subsection), String(req.user.id)) })
   } catch (error) {
     console.error("deleteLectureComment failed:", error.message)
     return res.status(500).json({ success: false, message: "Could not delete the comment" })

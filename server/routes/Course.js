@@ -14,6 +14,7 @@ const {
   getInstructorCourses,
   deleteCourse,
 } = require("../controllers/Course")
+const { addClass } = require("../controllers/courseClasses")
 
 // Tags Controllers Import
 
@@ -57,6 +58,8 @@ const { auth, isInstructor, isStudent, isAdmin } = require("../middleware/auth")
 
 // Courses can Only be Created by Instructors
 router.post("/createCourse", auth, isInstructor, createCourse)
+// Add a class (title, description, tags, video) to a course the instructor owns
+router.post("/addClass", auth, isInstructor, addClass)
 // Edit Course routes
 router.post("/editCourse", auth, isInstructor, editCourse)
 //Add a Section to a Course
